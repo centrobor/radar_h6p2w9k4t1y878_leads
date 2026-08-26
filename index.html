@@ -751,17 +751,18 @@
                 return "#" + ("00000".substring(0, 6 - color.length) + color);
             }
 
-            // ===== DETECÇÃO DE CAMPANHA =====
-            function detectarCampanha(mensagem) {
-                if (!mensagem) return { icone: '<i class="fas fa-globe utm-icon" style="color:#6b7280;"></i>', nome: '—' };
-                const msg = mensagem.toLowerCase();
-                if (msg.includes('google')) return { icone: '<i class="fab fa-google utm-icon" style="color:#ea4335;"></i>', nome: 'Google' };
-                if (msg.includes('facebook') || msg.includes('fb')) return { icone: '<i class="fab fa-facebook utm-icon" style="color:#1877f2;"></i>', nome: 'Facebook' };
-                if (msg.includes('instagram')) return { icone: '<i class="fab fa-instagram utm-icon" style="color:#e4405f;"></i>', nome: 'Instagram' };
-                if (msg.includes('linkedin')) return { icone: '<i class="fab fa-linkedin utm-icon" style="color:#0a66c2;"></i>', nome: 'LinkedIn' };
-                if (msg.includes('email') || msg.includes('mail')) return { icone: '<i class="fas fa-envelope utm-icon" style="color:#6b7280;"></i>', nome: 'E-mail' };
-                if (msg.includes('organic')) return { icone: '<i class="fas fa-chart-line utm-icon" style="color:#22c55e;"></i>', nome: 'Orgânico' };
-                return { icone: '<i class="fas fa-link utm-icon" style="color:#6b7280;"></i>', nome: '—' };
+            // ===== DETECÇÃO DE CAMPANHA (agora baseada na coluna "Campanha?") =====
+            function getCampanhaInfo(campanha) {
+                const map = {
+                    'google': { icone: '<i class="fab fa-google utm-icon" style="color:#ea4335;"></i>', nome: 'Google' },
+                    'facebook': { icone: '<i class="fab fa-facebook utm-icon" style="color:#1877f2;"></i>', nome: 'Facebook' },
+                    'instagram': { icone: '<i class="fab fa-instagram utm-icon" style="color:#e4405f;"></i>', nome: 'Instagram' },
+                    'linkedin': { icone: '<i class="fab fa-linkedin utm-icon" style="color:#0a66c2;"></i>', nome: 'LinkedIn' },
+                    'email': { icone: '<i class="fas fa-envelope utm-icon" style="color:#6b7280;"></i>', nome: 'E-mail' },
+                    'organic': { icone: '<i class="fas fa-chart-line utm-icon" style="color:#22c55e;"></i>', nome: 'Orgânico' }
+                };
+                const key = (campanha || '').toLowerCase().trim();
+                return map[key] || { icone: '<i class="fas fa-link utm-icon" style="color:#6b7280;"></i>', nome: campanha || '—' };
             }
 
             // ===== STATUS =====
@@ -861,6 +862,8 @@
                     let valorProposta = cleanCurrency(item["Valor da Propostas"] || item["Valor da Proposta"] || item["valor da proposta"] || 0);
                     let valorVenda = cleanCurrency(item["Valor da Venda"] || item["Valor da venda"] || item["valor da venda"] || 0);
                     let vendedor = item["Vendedor"] || item["vendedor"] || "—";
+                    // Lê a coluna "Campanha?" diretamente
+                    let campanha = item["Campanha?"] || item["campanha?"] || "";
 
                     if (override.status) statusRaw = override.status;
                     if (override.vendedor) vendedor = override.vendedor;
@@ -869,7 +872,8 @@
 
                     let statusFinal = normalizeStatus(statusRaw, cadastroRealizado);
 
-                    const campanha = detectarCampanha(mensagem);
+                    // Obtém as informações da campanha a partir do valor da coluna
+                    const campanhaInfo = getCampanhaInfo(campanha);
 
                     const diffDias = dataObj ? (agora - dataObj.getTime()) / (1000 * 60 * 60 * 24) : 999;
                     const precisaJustificativa = cadastroRealizado && cadastroRealizado.toLowerCase() === 'sim';
@@ -917,8 +921,8 @@
                         valorProposta: valorProposta,
                         cadastroRealizado: cadastroRealizado,
                         observacoes: observacoes,
-                        campanhaIcone: campanha.icone,
-                        campanhaNome: campanha.nome
+                        campanhaIcone: campanhaInfo.icone,
+                        campanhaNome: campanhaInfo.nome
                     });
                 });
 
