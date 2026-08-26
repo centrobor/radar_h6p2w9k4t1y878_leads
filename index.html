@@ -561,6 +561,18 @@
                 <select id="statusFilter"><option value="todos">Todos os status</option></select>
             </div>
             <div class="filter-group">
+                <i class="fas fa-bullhorn"></i>
+                <select id="campanhaFilter"><option value="todas">Todas campanhas</option></select>
+            </div>
+            <div class="filter-group">
+                <i class="fas fa-check-circle"></i>
+                <select id="cadastroFilter">
+                    <option value="todos">Cadastro: Todos</option>
+                    <option value="sim">Sim</option>
+                    <option value="nao">Não</option>
+                </select>
+            </div>
+            <div class="filter-group">
                 <i class="fas fa-search"></i>
                 <input type="text" id="searchInput" placeholder="Buscar nome, empresa...">
             </div>
@@ -751,7 +763,7 @@
                 return "#" + ("00000".substring(0, 6 - color.length) + color);
             }
 
-            // ===== DETECÇÃO DE CAMPANHA (agora baseada na coluna "Campanha?") =====
+            // ===== DETECÇÃO DE CAMPANHA =====
             function getCampanhaInfo(campanha) {
                 const map = {
                     'google': { icone: '<i class="fab fa-google utm-icon" style="color:#ea4335;"></i>', nome: 'Google' },
@@ -862,8 +874,9 @@
                     let valorProposta = cleanCurrency(item["Valor da Propostas"] || item["Valor da Proposta"] || item["valor da proposta"] || 0);
                     let valorVenda = cleanCurrency(item["Valor da Venda"] || item["Valor da venda"] || item["valor da venda"] || 0);
                     let vendedor = item["Vendedor"] || item["vendedor"] || "—";
-                    // Lê a coluna "Campanha?" diretamente
                     let campanha = item["Campanha?"] || item["campanha?"] || "";
+                    // Lê o campo de observações "Obs." (com ponto)
+                    let obsInicial = item["Obs."] || item["Obs"] || "";
 
                     if (override.status) statusRaw = override.status;
                     if (override.vendedor) vendedor = override.vendedor;
@@ -872,7 +885,6 @@
 
                     let statusFinal = normalizeStatus(statusRaw, cadastroRealizado);
 
-                    // Obtém as informações da campanha a partir do valor da coluna
                     const campanhaInfo = getCampanhaInfo(campanha);
 
                     const diffDias = dataObj ? (agora - dataObj.getTime()) / (1000 * 60 * 60 * 24) : 999;
@@ -902,7 +914,24 @@
                         }
                     }
 
+                    // === INÍCIO DA INCLUSÃO DA OBSERVAÇÃO INICIAL ===
                     let observacoes = override.observacoes || "";
+                    // Se não houver observações no override, mas houver no campo "Obs." da planilha, usa-o como observação inicial.
+                    if (!observacoes && obsInicial.trim() !== "") {
+                        // Se a obs inicial não começar com [Automático] nem [Manual], adicionamos como [Manual] com a data atual?
+                        // Para manter a data original, tentamos extrair uma data do texto, senão usamos a data do lead.
+                        // Vamos simplesmente usar o texto como está, e no histórico ele será exibido como manual (pois não tem prefixo).
+                        observacoes = obsInicial.trim();
+                    }
+                    // Se já houver observações no override, mas o campo "Obs." contém algo novo, poderíamos concatenar? 
+                    // Para evitar duplicidade, se override já tem, ignoramos a obs inicial (pois override é prioridade).
+                    // Mas se override tem e é igual à obs inicial, não duplicamos.
+                    // Verificamos se a obs inicial já está contida nas observações (caso tenha sido carregada anteriormente).
+                    if (observacoes && obsInicial.trim() && !observacoes.includes(obsInicial.trim().substring(0, 50))) {
+                        // Se não estiver contida, concatenamos com quebra de linha.
+                        observacoes = observacoes.trim() + '\n' + obsInicial.trim();
+                    }
+                    // === FIM DA INCLUSÃO ===
 
                     leads.push({
                         id: leadId,
@@ -1078,6 +1107,8 @@
                 return {
                     vendedor: document.getElementById('vendedorFilter').value,
                     status: document.getElementById('statusFilter').value,
+                    campanha: document.getElementById('campanhaFilter').value,
+                    cadastro: document.getElementById('cadastroFilter').value,
                     search: document.getElementById('searchInput').value.toLowerCase().trim(),
                     dataInicio: document.getElementById('dataInicioFilter').value,
                     dataFim: document.getElementById('dataFimFilter').value
@@ -1089,6 +1120,12 @@
                 filteredLeads = processedLeads.filter(lead => {
                     if (f.vendedor !== 'todos' && lead.vendedor !== f.vendedor) return false;
                     if (f.status !== 'todos' && lead.status !== f.status) return false;
+                    if (f.campanha !== 'todas' && lead.campanhaNome !== f.campanha) return false;
+                    if (f.cadastro !== 'todos') {
+                        const cad = (lead.cadastroRealizado || '').toLowerCase();
+                        if (f.cadastro === 'sim' && cad !== 'sim') return false;
+                        if (f.cadastro === 'nao' && cad === 'sim') return false;
+                    }
                     if (f.search) {
                         const searchStr = `${lead.nome} ${lead.empresa} ${lead.whatsapp} ${lead.email} ${lead.mensagem} ${lead.observacoes}`.toLowerCase();
                         if (!searchStr.includes(f.search)) return false;
@@ -1108,6 +1145,7 @@
             }
 
             function populateFilterOptions() {
+                // Vendedor
                 const vendedores = [...new Set(processedLeads.map(l => l.vendedor).filter(Boolean))].sort();
                 const vendSelect = document.getElementById('vendedorFilter');
                 const currentVend = vendSelect.value;
@@ -1115,12 +1153,21 @@
                     vendedores.map(v => `<option value="${v}">${v}</option>`).join('');
                 vendSelect.value = vendedores.includes(currentVend) ? currentVend : 'todos';
 
+                // Status
                 const statuses = [...new Set(processedLeads.map(l => l.status).filter(Boolean))].sort();
                 const statSelect = document.getElementById('statusFilter');
                 const currentStat = statSelect.value;
                 statSelect.innerHTML = '<option value="todos">Todos os status</option>' +
                     statuses.map(s => `<option value="${s}">${s}</option>`).join('');
                 statSelect.value = statuses.includes(currentStat) ? currentStat : 'todos';
+
+                // Campanha
+                const campanhas = [...new Set(processedLeads.map(l => l.campanhaNome).filter(n => n && n !== '—'))].sort();
+                const campSelect = document.getElementById('campanhaFilter');
+                const currentCamp = campSelect.value;
+                campSelect.innerHTML = '<option value="todas">Todas campanhas</option>' +
+                    campanhas.map(c => `<option value="${c}">${c}</option>`).join('');
+                campSelect.value = campanhas.includes(currentCamp) ? currentCamp : 'todas';
             }
 
             // ===== RENDERIZAÇÃO =====
@@ -1305,7 +1352,7 @@
                         <div class="detail-item"><i class="fas fa-bullhorn"></i><span class="dl-label">Campanha</span><span class="dl-value">${campanhaDisplay}</span></div>
                         <div class="detail-item detail-full">
                             <i class="fas fa-clock-rotate-left"></i>
-                            <span class="dl-label">Histórico</span>
+                            <span class="dl-label">Obs. / Histórico</span>
                             <span class="dl-value" style="width:100%;">
                                 <div class="historico-container" id="historicoContainer">${historicoHtml}</div>
                             </span>
@@ -1579,12 +1626,16 @@
 
                 document.getElementById('vendedorFilter').addEventListener('change', applyFilters);
                 document.getElementById('statusFilter').addEventListener('change', applyFilters);
+                document.getElementById('campanhaFilter').addEventListener('change', applyFilters);
+                document.getElementById('cadastroFilter').addEventListener('change', applyFilters);
                 document.getElementById('searchInput').addEventListener('input', debounce(applyFilters, 300));
                 document.getElementById('dataInicioFilter').addEventListener('change', applyFilters);
                 document.getElementById('dataFimFilter').addEventListener('change', applyFilters);
                 document.getElementById('clearFiltersBtn').addEventListener('click', () => {
                     document.getElementById('vendedorFilter').value = 'todos';
                     document.getElementById('statusFilter').value = 'todos';
+                    document.getElementById('campanhaFilter').value = 'todas';
+                    document.getElementById('cadastroFilter').value = 'todos';
                     document.getElementById('searchInput').value = '';
                     document.getElementById('dataInicioFilter').value = `${cy}-01-01`;
                     document.getElementById('dataFimFilter').value = `${cy}-12-31`;
@@ -1608,6 +1659,8 @@
                     closeSidebar();
                     document.getElementById('vendedorFilter').value = 'todos';
                     document.getElementById('statusFilter').value = 'todos';
+                    document.getElementById('campanhaFilter').value = 'todas';
+                    document.getElementById('cadastroFilter').value = 'todos';
                     document.getElementById('searchInput').value = '';
                     document.getElementById('dataInicioFilter').value = `${cy}-01-01`;
                     document.getElementById('dataFimFilter').value = `${cy}-12-31`;
