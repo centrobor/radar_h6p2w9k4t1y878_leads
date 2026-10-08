@@ -928,7 +928,6 @@ button{cursor:pointer}
 
   <div class="loading-institution">Desenvolvimento por Eduardo Mineiro para Centrobor - Radar Centrobor</div>
 </div>
-<div class="app-footer">Desenvolvimento por Eduardo Mineiro para Centrobor - Radar Centrobor</div>
 <div class="toast" id="toast"></div>
 <script>
 /* ============================================================
@@ -2432,19 +2431,26 @@ function openFullStates(){
   const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Estados — ${data.length}</title><style>body{font-family:Inter,system-ui,sans-serif;margin:0;background:#f5f7fa;color:#1f2937}header{background:#fff;border-bottom:1px solid #e5e7eb;padding:16px 22px;position:sticky;top:0}header h1{margin:0;font-size:18px}.wrap{padding:0 22px 40px}table{width:100%;border-collapse:collapse;background:#fff}th,td{padding:10px 12px;border-bottom:1px solid #eef0f2;font-size:12px;text-align:left}th{background:#fafbfc;font-size:11px;text-transform:uppercase;color:#6b7280}.num{text-align:right}
 
 /* ---------- Assinatura discreta da interface ---------- */
-.app-footer{
-  position:fixed;
-  z-index:850;
-  left:0;
-  right:0;
-  bottom:4px;
-  text-align:center;
+.status{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  white-space:nowrap;
+}
+.status:after{
+  content:"Desenvolvimento por Eduardo Mineiro para Centrobor - Radar Centrobor";
+  display:inline-flex;
+  align-items:center;
+  min-height:18px;
+  padding:3px 7px;
+  border:1px solid rgba(229,231,235,.95);
+  border-radius:7px;
+  background:rgba(248,250,252,.92);
+  color:rgba(55,65,81,.58);
   font-size:7px;
   line-height:1;
-  color:rgba(55,65,81,.58);
-  letter-spacing:.015em;
-  pointer-events:none;
-  user-select:none;
+  letter-spacing:.01em;
+  box-shadow:0 1px 4px rgba(15,23,42,.06);
 }
 .loading-institution{
   font-size:7px!important;
@@ -2452,7 +2458,6 @@ function openFullStates(){
   letter-spacing:.015em!important;
 }
 @media(max-width:600px){
-  .app-footer{font-size:6px;bottom:3px}
   .loading-institution{font-size:6px!important}
 }
 </style></head><body><header><h1>Estados — ${int(data.length)} registros</h1></header><div class="wrap"><table><thead><tr><th>#</th><th>Estado</th><th class="num">Faturamento</th><th class="num">Qtd.</th><th class="num">Lanç.</th><th class="num">Empresas</th><th class="num">Cidades</th></tr></thead><tbody>${rowsHtml}</tbody></table></div></body></html>`;
