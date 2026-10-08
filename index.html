@@ -94,6 +94,65 @@
         .btn-outline:hover { background: #f8fafc; border-color: #94a3b8; transform: translateY(-1px); }
         .btn-sm { padding: 6px 14px; font-size: 0.72rem; }
         .btn-xs { padding: 5px 10px; font-size: 0.68rem; gap: 4px; }
+
+        /* ===== NAVEGAÇÃO ENTRE FERRAMENTAS ===== */
+        .tool-tabs {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: 10px;
+        }
+        .tool-tab {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 13px;
+            border-radius: var(--radius-full);
+            border: 1px solid var(--gray-200);
+            background: #fff;
+            color: #475569;
+            text-decoration: none;
+            font-size: 0.74rem;
+            font-weight: 650;
+            white-space: nowrap;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+            transition: all 0.2s ease;
+        }
+        .tool-tab:hover {
+            color: var(--primary);
+            border-color: #b8c7d9;
+            background: #f8fafc;
+            transform: translateY(-1px);
+        }
+        .tool-tab.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(30,58,95,0.18);
+        }
+        .tool-tab-new {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px 6px;
+            border-radius: 999px;
+            background: #f59e0b;
+            color: #fff;
+            font-size: 0.54rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            line-height: 1.2;
+            box-shadow: 0 2px 6px rgba(245,158,11,0.28);
+            animation: newPulse 2s ease-in-out infinite;
+        }
+        @keyframes newPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.04); }
+        }
+        @media (max-width: 768px) {
+            .tool-tabs { display: none; }
+        }
         .btn-danger { background: var(--danger); color: white; }
         .btn-danger:hover { background: #dc2626; }
         .hamburger-btn { display: none; background: none; border: none; font-size: 1.4rem; cursor: pointer; padding: 8px 10px; border-radius: 12px; color: #475569; transition: 0.15s; }
@@ -512,6 +571,14 @@
             <div class="sidebar-label">Links</div>
             <a href="https://www.centrobor.com.br/" target="_blank" class="sidebar-item" style="text-decoration:none;"><i class="fas fa-globe"></i> Site Centrobor</a>
             <a href="https://www.centrobor.com.br/blog/" target="_blank" class="sidebar-item" style="text-decoration:none;"><i class="fas fa-blog"></i> Blog</a>
+            <a href="https://centrobor.github.io/radar_h6p2w9k4t1y878_leads/maps"
+               target="_blank"
+               rel="noopener noreferrer"
+               class="sidebar-item"
+               style="text-decoration:none;">
+                <i class="fas fa-map-location-dot"></i> Radar · Mapas
+                <span id="mapsNewBadgeMobile" class="tool-tab-new" style="margin-left:auto;">NOVO</span>
+            </a>
         </div>
     </nav>
 
@@ -529,6 +596,17 @@
                     <div class="topbar-subtitle">Centrobor · Acompanhamento</div>
                 </div>
             </div>
+            <nav class="tool-tabs" aria-label="Ferramentas">
+                <a href="https://centrobor.github.io/radar_h6p2w9k4t1y878_leads/maps"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="tool-tab"
+                   title="Abrir Radar Centrobor · Mapas em uma nova guia">
+                    <i class="fas fa-map-location-dot"></i>
+                    <span>Radar · Mapas</span>
+                    <span id="mapsNewBadge" class="tool-tab-new">NOVO</span>
+                </a>
+            </nav>
             <div class="topbar-actions">
                 <button class="btn btn-outline btn-sm keep-visible" id="refreshBtn" title="Atualizar">
                     <i class="fas fa-rotate"></i> <span class="hide-mobile">Atualizar</span>
@@ -690,6 +768,22 @@
             const SHEET_URL = "https://opensheet.elk.sh/1eI87ScC4wFcDeFPz8K-IbpTWTM2Ui2WXjRbQIr3SsdA/leads";
             const DIAS_LIMITE = 30;
             const STATUS_ATIVOS = ["Em Aberto", "Aguardando Resposta", "Em Andamento", "Lead Atendido"];
+
+            // "NOVO" da ferramenta Radar · Mapas: visível por 45 dias a partir de 08/10/2026.
+            const MAPAS_NOVO_INICIO = new Date(2026, 9, 8);
+            const MAPAS_NOVO_FIM = new Date(2026, 9, 8);
+            MAPAS_NOVO_FIM.setDate(MAPAS_NOVO_FIM.getDate() + 45);
+
+            function atualizarSeloMapaNovo() {
+                const agora = new Date();
+                const mostrarNovo = agora >= MAPAS_NOVO_INICIO && agora < MAPAS_NOVO_FIM;
+                ['mapsNewBadge', 'mapsNewBadgeMobile'].forEach(id => {
+                    const badge = document.getElementById(id);
+                    if (badge) badge.style.display = mostrarNovo ? 'inline-flex' : 'none';
+                });
+            }
+
+            atualizarSeloMapaNovo();
 
             // ===== ESTADO GLOBAL =====
             let allLeads = [];
