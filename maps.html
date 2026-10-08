@@ -1996,8 +1996,10 @@ function loadViewState(){
     if(s.mapView)window._savedMapView=s.mapView;
     renderChips();enableCollapsibleSections();
     if(Array.isArray(s.collapsed))document.querySelectorAll('#side .section').forEach((sec,i)=>{if(s.collapsed[i]){sec.classList.add('section-collapsed');[...sec.children].filter(el=>!el.classList.contains('section-title')).forEach(el=>el.style.display='none')}});
-    if(s.sideClosed)$('side').classList.add('closed');else $('side').classList.remove('closed');
-    if(s.resultsHidden)$('resultDock').classList.add('hidden');else $('resultDock').classList.remove('hidden');
+    // A visibilidade dos painéis NÃO é restaurada do localStorage.
+    // A cada abertura da página, ambos começam visíveis.
+    $('side').classList.remove('closed');
+    $('resultDock').classList.remove('hidden');
     return !!(s.from&&s.to);
   }catch(e){return false}
 }
@@ -2635,8 +2637,6 @@ function wire(){
   $('showResults').onclick=()=>{
     $('resultDock').classList.remove('hidden');
     $('dockReopen').classList.remove('is-visible');
-    $('side').classList.add('closed');
-    $('sideReopen').classList.add('is-visible');
     saveViewState();
   };
   $('dockClose').onclick=()=>{
@@ -2689,9 +2689,18 @@ function wire(){
    BOOT
    ============================================================ */
 wire();
-$('sideReopen').classList.toggle('is-visible',$('side').classList.contains('closed'));
-$('dockReopen').classList.toggle('is-visible',$('resultDock').classList.contains('hidden'));
+
+// Estado inicial obrigatório: os dois painéis começam abertos.
+// O usuário pode ocultá-los depois, mas isso é apenas visual e não é persistido.
+$('side').classList.remove('closed');
+$('resultDock').classList.remove('hidden');
+$('sideReopen').classList.remove('is-visible');
+$('dockReopen').classList.remove('is-visible');
+
 fetchServer();
+
+// loadViewState() também força os painéis abertos, então os botões de reexibição
+// permanecem escondidos até que o usuário oculte manualmente algum painel.
 
 /* Exposição global */
 window.removeFilter=removeFilter;
