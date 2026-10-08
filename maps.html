@@ -795,7 +795,7 @@ button{cursor:pointer}
     radial-gradient(ellipse at 50% 50%,transparent 0 22%,rgba(0,3,10,.20) 46%,rgba(0,2,7,.82) 100%),
     linear-gradient(90deg,rgba(0,3,10,.86),rgba(0,3,10,.20) 40%,rgba(0,3,10,.20) 60%,rgba(0,3,10,.86))!important;
 }
-.loading-kicker,.progress-meta span,.loading-institution{display:none!important}
+.loading-kicker,.progress-meta span{display:none!important}
 .loading .timebox h2{font-size:clamp(36px,5vw,60px)!important}
 .loading .timebox p.load-message{
   margin-top:12px!important;
@@ -807,6 +807,13 @@ button{cursor:pointer}
 .loading .progress-wrap{margin-top:24px}
 .loading .progress-meta{justify-content:flex-end}
 .loading .progress-meta strong{font-size:9px;color:rgba(255,255,255,.56)}
+
+/* Crédito discreto da interface */
+.status{display:flex;align-items:center;gap:8px;white-space:nowrap;max-width:calc(100vw - 490px);}
+.dev-badge{display:inline-flex;align-items:center;max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:4px 7px;border:1px solid #e5e7eb;background:#f8fafc;color:#94a3b8;border-radius:999px;font-size:8px;font-weight:600;letter-spacing:.01em;}
+.loading-institution{display:block!important;font-size:8px!important;color:rgba(255,255,255,.42)!important;letter-spacing:.025em!important;}
+@media(max-width:900px){.status{max-width:calc(100vw - 28px);}.dev-badge{max-width:48vw;}}
+@media(max-width:600px){.status{gap:5px;max-width:calc(100vw - 28px);}.dev-badge{font-size:7px;max-width:45vw;padding:3px 6px;}}
 </style>
 
 </style>
@@ -893,7 +900,7 @@ button{cursor:pointer}
 </div>
 <div class="map-reload" id="mapReload"><i class="fa-solid fa-rotate"></i><span>Atualizando mapa…</span></div>
 <div class="legend"><b>Intensidade comercial</b><div style="width:150px;height:8px;border-radius:10px;margin:7px 0;background:linear-gradient(90deg,#2563eb,#06b6d4,#22c55e,#facc15,#f97316,#dc2626)" ></div><div style="display:flex;justify-content:space-between;font-size:9px;color:#6b7280"><span>Menor</span><span>Maior</span></div></div>
-<div class="status" id="mapStatus">Mapa comercial • Ano atual</div>
+<div class="status" id="mapStatus">Mapa comercial • Ano atual <span class="dev-badge">Desenvolvido por Eduardo Mineiro para Centrobor - Radar Centrobor</span></div>
 <div class="actions"><button class="action" id="pdf"><i class="fa-solid fa-file-pdf"></i> PDF</button><button class="action" id="excel"><i class="fa-solid fa-file-excel"></i> Excel</button><button class="action primary" id="report"><i class="fa-solid fa-chart-column"></i> Relatório</button></div>
 </div>
 <div class="modal" id="modal"><div class="modalbox"><div class="modalhead"><h2 id="modalTitle">Detalhes</h2><div class="modal-head-actions"><button class="modal-print" id="modalPrint" title="Imprimir / Salvar como PDF"><i class="fa-solid fa-print"></i></button><button class="close" id="modalClose"><i class="fa-solid fa-xmark"></i></button></div></div><div id="modalBody"></div></div></div>
@@ -926,7 +933,7 @@ button{cursor:pointer}
     </div>
   </div>
 
-  <div class="loading-institution">Desenvolvimento por Eduardo Mineiro para Centrobor - Radar Centrobor</div>
+  <div class="loading-institution">Desenvolvido por Eduardo Mineiro para Centrobor - Radar Centrobor</div>
 </div>
 <div class="toast" id="toast"></div>
 <script>
@@ -2429,37 +2436,6 @@ function openFullStates(){
   const data=agg('estado').filter(([k])=>k);
   const rowsHtml=data.map(([k,o],i)=>`<tr><td>${i+1}</td><td><b>${esc(k)}</b> — ${esc(stateNames[k]||'')}</td><td style="text-align:right">${money(o.valor)}</td><td style="text-align:right">${int(o.qtd)}</td><td style="text-align:right">${int(o.n)}</td><td style="text-align:right">${int(o.emp.size)}</td><td style="text-align:right">${int(o.cidades.size)}</td></tr>`).join('');
   const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Estados — ${data.length}</title><style>body{font-family:Inter,system-ui,sans-serif;margin:0;background:#f5f7fa;color:#1f2937}header{background:#fff;border-bottom:1px solid #e5e7eb;padding:16px 22px;position:sticky;top:0}header h1{margin:0;font-size:18px}.wrap{padding:0 22px 40px}table{width:100%;border-collapse:collapse;background:#fff}th,td{padding:10px 12px;border-bottom:1px solid #eef0f2;font-size:12px;text-align:left}th{background:#fafbfc;font-size:11px;text-transform:uppercase;color:#6b7280}.num{text-align:right}
-
-/* ---------- Assinatura discreta da interface ---------- */
-.status{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  white-space:nowrap;
-}
-.status:after{
-  content:"Desenvolvimento por Eduardo Mineiro para Centrobor - Radar Centrobor";
-  display:inline-flex;
-  align-items:center;
-  min-height:18px;
-  padding:3px 7px;
-  border:1px solid rgba(229,231,235,.95);
-  border-radius:7px;
-  background:rgba(248,250,252,.92);
-  color:rgba(55,65,81,.58);
-  font-size:7px;
-  line-height:1;
-  letter-spacing:.01em;
-  box-shadow:0 1px 4px rgba(15,23,42,.06);
-}
-.loading-institution{
-  font-size:7px!important;
-  color:rgba(255,255,255,.42)!important;
-  letter-spacing:.015em!important;
-}
-@media(max-width:600px){
-  .loading-institution{font-size:6px!important}
-}
 </style></head><body><header><h1>Estados — ${int(data.length)} registros</h1></header><div class="wrap"><table><thead><tr><th>#</th><th>Estado</th><th class="num">Faturamento</th><th class="num">Qtd.</th><th class="num">Lanç.</th><th class="num">Empresas</th><th class="num">Cidades</th></tr></thead><tbody>${rowsHtml}</tbody></table></div></body></html>`;
   const blob=new Blob([html],{type:'text/html;charset=utf-8'});
   const url=URL.createObjectURL(blob);
