@@ -123,9 +123,18 @@ button{cursor:pointer}
 .toast.show{display:block}
 .mobile-fab{display:none}
 
+/* === Explorar vendas: ocultação completa === */
+.side-fab{position:absolute;z-index:1250;left:14px;top:84px;width:46px;height:46px;border:0;border-radius:50%;background:#fff;color:#1a73e8;box-shadow:var(--shadow);display:none;align-items:center;justify-content:center;cursor:pointer;transition:.18s}
+.side-fab:hover{transform:translateY(-1px) scale(1.03);box-shadow:0 7px 24px rgba(32,33,36,.25)}
+.app.side-hidden .side{transform:translateX(calc(-100% - 28px));opacity:0;visibility:hidden;pointer-events:none}
+.app.side-hidden .side-fab{display:flex}
+@media(max-width:900px){.side-fab{display:none!important}.app.side-hidden .side{transform:translateY(calc(-100% - 18px));opacity:0;visibility:hidden;pointer-events:none}}
+
 /* === Result dock === */
 .result-dock{position:absolute;z-index:850;right:14px;top:84px;bottom:14px;width:430px;background:rgba(255,255,255,.96);backdrop-filter:blur(16px);border-radius:16px;box-shadow:0 6px 26px rgba(32,33,36,.24);display:flex;flex-direction:column;overflow:hidden}
 .result-dock.hidden{display:none}
+.result-dock-fab{position:absolute;z-index:1200;right:14px;top:84px;width:42px;height:42px;border:0;border-radius:50%;background:#fff;color:#1a73e8;box-shadow:var(--shadow);display:none;align-items:center;justify-content:center;cursor:pointer;transition:.18s}.result-dock-fab:hover{transform:translateY(-1px);box-shadow:0 7px 22px rgba(32,33,36,.24)}.result-dock-fab.show{display:flex}.result-dock-fab span{position:absolute;right:49px;white-space:nowrap;background:#202124;color:#fff;padding:6px 9px;border-radius:8px;font-size:9px;opacity:0;pointer-events:none;transition:.15s}.result-dock-fab:hover span{opacity:1}
+@media(max-width:900px){.result-dock-fab{right:14px;top:84px}.result-dock-fab span{display:none}}
 .dock-head{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
 .dock-head b{display:block;font-size:13px}
 .dock-head span{font-size:10px;color:#6b7280}
@@ -870,6 +879,8 @@ button{cursor:pointer}
   <div class="section compact-actions"><button class="wide-action" id="showResults"><i class="fa-solid fa-table-list"></i><span>Ver tabelas da análise</span><i class="fa-solid fa-arrow-right"></i></button></div>
  </div>
 </aside>
+<button class="side-fab" id="sideFab" title="Mostrar Explorar vendas" aria-label="Mostrar Explorar vendas"><i class="fa-solid fa-chevron-right"></i></button>
+<button class="result-dock-fab" id="resultDockFab" title="Reexibir resultados"><i class="fa-solid fa-chevron-left"></i><span>Reexibir resultados</span></button>
 <div class="result-dock" id="resultDock">
   <div class="dock-head">
     <div><b>Resultados</b><span id="dockSubtitle">Análise atual</span></div>
@@ -1898,7 +1909,7 @@ function render(){
 }
 function apply(){
   filtered=raw.filter(matches);
-  $('resultDock').classList.remove('hidden');
+  $('resultDock').classList.remove('hidden');$('resultDockFab').classList.remove('show');
   render();
   saveViewState();
   $('mapStatus').querySelector('.status-context').textContent='Mapa • '+(contextDepth()==='geral'?'Visão geral do Brasil':contextLabel());
@@ -1923,6 +1934,7 @@ function saveViewState(){
       from:$('from').value,to:$('to').value,allPeriod:$('allPeriod').checked,
       year:$('yearSelect').value,search:$('globalSearch').value,
       sideClosed:$('side').classList.contains('closed'),
+      sideHidden:$('app').classList.contains('side-hidden'),
       collapsed:[...document.querySelectorAll('#side .section')].map(s=>s.classList.contains('section-collapsed')),
       resultsHidden:$('resultDock').classList.contains('hidden'),
       sortState,drillStack,
@@ -1948,7 +1960,8 @@ function loadViewState(){
     renderChips();enableCollapsibleSections();
     if(Array.isArray(s.collapsed))document.querySelectorAll('#side .section').forEach((sec,i)=>{if(s.collapsed[i]){sec.classList.add('section-collapsed');[...sec.children].filter(el=>!el.classList.contains('section-title')).forEach(el=>el.style.display='none')}});
     if(s.sideClosed)$('side').classList.add('closed');else $('side').classList.remove('closed');
-    if(s.resultsHidden)$('resultDock').classList.add('hidden');else $('resultDock').classList.remove('hidden');
+    if(s.sideHidden)$('app').classList.add('side-hidden');else $('app').classList.remove('side-hidden');
+    if(s.resultsHidden){$('resultDock').classList.add('hidden');$('resultDockFab').classList.add('show')}else{$('resultDock').classList.remove('hidden');$('resultDockFab').classList.remove('show')};
     return !!(s.from&&s.to);
   }catch(e){return false}
 }
@@ -1961,14 +1974,13 @@ function clearSavedConsultation(){
   window._savedMapView={center:[-14.3,-52.8],zoom:4};
   $('globalSearch').value='';$('mapMode').value='auto';$('mapMetric').value='valor';
   document.querySelectorAll('.analysis').forEach(b=>b.classList.toggle('active',b.dataset.analysis==='produto'));
-  $('resultDock').classList.remove('hidden');$('side').classList.remove('closed');
+  $('resultDock').classList.remove('hidden');$('resultDockFab').classList.remove('show');$('side').classList.remove('closed');$('app').classList.remove('side-hidden');
   document.querySelectorAll('#side .section').forEach(sec=>{sec.classList.remove('section-collapsed');[...sec.children].filter(el=>!el.classList.contains('section-title')).forEach(el=>el.style.display='')});
   setPeriod('current');
   toast('Filtros e contexto resetados para o padrão.');
 }
 function enableCollapsibleSections(){
-  document.querySelectorAll('#side .section').forEach((sec,i)=>{
-    if(i===5)return;
+  document.querySelectorAll('#side .section').forEach((sec)=>{
     const title=sec.querySelector('.section-title'); if(!title||title.dataset.bound)return;
     title.dataset.bound='1';
     title.onclick=()=>{
@@ -2583,14 +2595,30 @@ function wire(){
   $('excel').onclick=exportExcel;
   $('report').onclick=showReport;
   $('modalClose').onclick=closeModal; $('modalPrint').onclick=printCurrentModal;
-  $('showResults').onclick=()=>{$('resultDock').classList.remove('hidden');$('side').classList.add('closed');saveViewState()};
-  $('dockClose').onclick=()=>{$('resultDock').classList.add('hidden');$('side').classList.remove('closed');saveViewState()};
+  const toggleResults=(show=true)=>{
+    $('resultDock').classList.toggle('hidden',!show);
+    $('resultDockFab').classList.toggle('show',!show);
+    if(show){$('side').classList.add('closed');}
+    saveViewState();
+  };
+  $('showResults').onclick=()=>toggleResults(true);
+  $('dockClose').onclick=()=>toggleResults(false);
+  $('resultDockFab').onclick=()=>toggleResults(true);
   $('dockBack').onclick=backDock;
   $('dockReset').onclick=resetAll;
   $('productTotalCard').onclick=openFullRanking;
   window.onclick=e=>{if(e.target===$('modal'))closeModal()};
-  $('mobileToggle').onclick=()=>{$('side').classList.toggle('closed')};
-  $('closeSide').onclick=()=>{$('side').classList.add('closed')};
+  $('mobileToggle').onclick=()=>{$('side').classList.toggle('closed');saveViewState()};
+  $('closeSide').onclick=()=>{
+    $('app').classList.add('side-hidden');
+    $('side').classList.remove('closed');
+    saveViewState();
+  };
+  $('sideFab').onclick=()=>{
+    $('app').classList.remove('side-hidden');
+    $('side').classList.remove('closed');
+    saveViewState();
+  };
   document.querySelectorAll('th[data-sort]').forEach(th=>{
     th.addEventListener('click',()=>{
       const tableId=th.closest('table').parentElement.parentElement.querySelector('tbody').id;
